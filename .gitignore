@@ -1,0 +1,14 @@
+dataset/
+almost_good/
+dnn/
+model_attention/
+
+
+
+
+# Cached Python bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python

@@ -1,0 +1,30 @@
+# Core libraries
+numpy>=1.20.0
+matplotlib>=3.5.0
+librosa>=0.9.2
+scikit-learn>=1.0.0
+soundfile>=0.10.3
+tqdm>=4.62.0
+
+# TensorFlow with Intel optimizations
+intel-tensorflow>=2.9.0
+intel-extension-for-tensorflow[gpu]>=0.5.0
+
+# ONNX (optional for export)
+onnx>=1.10.0
+tf2onnx>=1.9.0
+onnxruntime>=1.10.0
+onnxruntime-gpu>=1.10.0
+
+# Visualization
+seaborn>=0.11.0
+
+# Deployment options (choose what you need)
+# For Streamlit app
+streamlit>=1.10.0
+
+# For FastAPI service
+fastapi>=0.70.0
+uvicorn>=0.15.0
+python-multipart>=0.0.5
+pydantic>=1.9.0
