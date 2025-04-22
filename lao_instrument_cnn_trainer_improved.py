@@ -1,17 +1,48 @@
 import os
+os.environ["SYCL_CACHE_PERSISTENT"] = "1"
+os.environ["ONEAPI_DEVICE_SELECTOR"] = "level_zero:gpu"
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+import intel_extension_for_tensorflow as itex
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import librosa
 import random
 import json
-import seaborn as sns
+import seaborn as sns 
 import scipy.signal
 import onnx
-import tf2onnx
+import tf2onnx 
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, classification_report
 from tqdm import tqdm
+
+# Configure Intel GPU
+try:
+    # Optimize for Intel GPUs
+    itex.set_backend('gpu')
+    
+    # Configure GPU memory growth
+    physical_devices = tf.config.list_physical_devices('GPU')
+    if physical_devices:
+        print(f"Found {len(physical_devices)} GPUs")
+        for device in physical_devices:
+            try:
+                tf.config.experimental.set_memory_growth(device, True)
+                print(f"Set memory growth for {device}")
+            except Exception as e:
+                print(f"Error setting memory growth: {e}")
+        
+        # Print GPU device info
+        print("GPU device information:")
+        for device in physical_devices:
+            details = tf.config.experimental.get_device_details(device)
+            print(f"  {device}: {details}")
+    else:
+        print("No GPUs found")
+except Exception as e:
+    print(f"Error configuring Intel GPU: {e}")
 
 # Configuration parameters
 class Config:
@@ -26,7 +57,7 @@ class Config:
     FMAX = 8000
     
     # Model parameters
-    BATCH_SIZE = 32
+    BATCH_SIZE = 16
     EPOCHS = 150  # Increased max epochs
     LEARNING_RATE = 0.001
     EARLY_STOPPING_PATIENCE = 15  # Increased patience
@@ -42,7 +73,7 @@ class Config:
     USE_CLASS_WEIGHTS = True
     USE_MIXUP = True
     MIXUP_ALPHA = 0.2
-    USE_FOCAL_LOSS = True
+    USE_FOCAL_LOSS = False
     FOCAL_LOSS_GAMMA = 2.0
     
     # Model ensemble
@@ -602,8 +633,10 @@ def build_improved_cnn_with_attention(input_shape, num_classes):
         attention_output = tf.keras.layers.LayerNormalization()(attention_output)
         
         # Add dense layer after attention
-        projected = tf.keras.layers.Dense(256, activation='relu')(attention_output)
+        projected = tf.keras.layers.Dense(512, activation='relu')(attention_output)
         projected = tf.keras.layers.Dropout(0.2)(projected)
+        
+        
         
         # Another skip connection
         projected_output = tf.keras.layers.add([attention_output, projected])
@@ -631,7 +664,6 @@ def build_improved_cnn_with_attention(input_shape, num_classes):
     
     return model
 
-# Focal loss for handling class imbalance
 def focal_loss(gamma=2.0, alpha=0.25):
     """Focal loss for multi-class classification with imbalance"""
     gamma = float(gamma)
@@ -639,26 +671,34 @@ def focal_loss(gamma=2.0, alpha=0.25):
     
     def focal_loss_fixed(y_true, y_pred):
         """Focal loss function for multi-class classification"""
+        # Clip prediction values to avoid log(0) error
         y_pred = tf.clip_by_value(y_pred, tf.keras.backend.epsilon(), 1.0 - tf.keras.backend.epsilon())
-        cross_entropy = -y_true * tf.math.log(y_pred)
         
-        # Convert one-hot form
-        if len(y_true.shape) > 1 and y_true.shape[1] > 1:
-            pass  # Already one-hot
-        else:
-            # Convert to one-hot
-            num_classes = y_pred.shape[1]
-            y_true = tf.one_hot(tf.cast(y_true, tf.int32), num_classes)
+        # Handle both sparse and one-hot labels using tf.cond and shape checking
+        # Create a boolean tensor that's true if y_true has one less dimension than y_pred
+        is_sparse = tf.equal(tf.rank(y_true), tf.rank(y_pred) - 1)
+        
+        # Convert to one-hot if needed, using tf.cond for conditional execution
+        y_true_processed = tf.cond(
+            is_sparse,
+            lambda: tf.one_hot(tf.cast(y_true, tf.int32), tf.shape(y_pred)[-1]),
+            lambda: y_true
+        )
+        
+        # Calculate focal loss
+        cross_entropy = -y_true_processed * tf.math.log(y_pred)
         
         # Calculate focal weight
-        p_t = tf.reduce_sum(y_true * y_pred, axis=-1)
-        alpha_factor = y_true * alpha + (1 - y_true) * (1 - alpha)
-        modulating_factor = (1.0 - p_t) ** gamma
+        p_t = tf.reduce_sum(y_true_processed * y_pred, axis=-1)
+        focal_weight = tf.pow(1.0 - p_t, gamma)
         
-        # Apply weighting to cross entropy
-        weighted_ce = alpha_factor * modulating_factor * cross_entropy
+        # Calculate alpha factor
+        alpha_factor = y_true_processed * alpha + (1 - y_true_processed) * (1 - alpha)
         
-        return tf.reduce_sum(weighted_ce, axis=-1)
+        # Combine weights with cross entropy
+        weighted_ce = focal_weight * tf.reduce_sum(alpha_factor * cross_entropy, axis=-1)
+        
+        return weighted_ce
     
     return focal_loss_fixed
 
@@ -799,14 +839,14 @@ def train_model_ensemble(X, y, classes, file_paths, num_models=3):
         # Compile with appropriate loss
         if Config.USE_FOCAL_LOSS:
             model.compile(
-                optimizer=tf.keras.optimizers.Adam(learning_rate=Config.LEARNING_RATE),
+                optimizer=itex.optimizers.Adam(learning_rate=Config.LEARNING_RATE),
                 loss=focal_loss(gamma=Config.FOCAL_LOSS_GAMMA),
                 metrics=['accuracy']
             )
         else:
             model.compile(
-                optimizer=tf.keras.optimizers.Adam(learning_rate=Config.LEARNING_RATE),
-                loss='sparse_categorical_crossentropy',
+                optimizer=itex.optimizers.Adam(learning_rate=Config.LEARNING_RATE),
+                loss='categorical_crossentropy',
                 metrics=['accuracy']
             )
         
@@ -841,10 +881,13 @@ def train_model_ensemble(X, y, classes, file_paths, num_models=3):
             )
         ]
         
+        y_train_onehot = tf.keras.utils.to_categorical(y_train, len(classes))
+        y_test_onehot = tf.keras.utils.to_categorical(y_test, len(classes))
+        
         # Train the model
         history = model.fit(
-            X_train, y_train,
-            validation_data=(X_test, y_test),
+            X_train, y_train_onehot,
+            validation_data=(X_test, y_test_onehot),
             epochs=Config.EPOCHS,
             batch_size=Config.BATCH_SIZE,
             callbacks=callbacks,
@@ -988,6 +1031,8 @@ def predict_and_analyze(model, X_test, y_test, classes, file_paths=None, models=
 
 # Main function
 def main():
+    # At the top of your main() function, add:
+    Config.USE_FOCAL_LOSS = False
     # Create necessary directories
     create_directory_if_not_exists("models")
     
@@ -1064,7 +1109,7 @@ def main():
         else:
             model.compile(
                 optimizer=tf.keras.optimizers.Adam(learning_rate=Config.LEARNING_RATE),
-                loss='sparse_categorical_crossentropy',
+                  loss='categorical_crossentropy',
                 metrics=['accuracy']
             )
         

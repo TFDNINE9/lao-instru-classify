@@ -3,8 +3,9 @@ almost_good/
 dnn/
 model_attention/
 
-
-
+venv/
+venv_cuda/
+tf-gpu-env/
 
 # Cached Python bytecode
 __pycache__/
@@ -12,3 +13,4 @@ __pycache__/
 *$py.class
 *.so
 .Python
+*.h5
