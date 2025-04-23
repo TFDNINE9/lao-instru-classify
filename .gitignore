@@ -2,7 +2,7 @@ dataset/
 almost_good/
 dnn/
 model_attention/
-
+.venv/
 venv/
 venv_cuda/
 tf-gpu-env/

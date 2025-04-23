@@ -1,14 +1,11 @@
 import os
-os.environ["SYCL_CACHE_PERSISTENT"] = "1"
-os.environ["ONEAPI_DEVICE_SELECTOR"] = "level_zero:gpu"
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
-import intel_extension_for_tensorflow as itex
 import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow as tf
 import librosa
-import random
+import random 
 import json
 import seaborn as sns 
 import scipy.signal
@@ -20,25 +17,16 @@ from tqdm import tqdm
 
 # Configure Intel GPU
 try:
-    # Optimize for Intel GPUs
-    itex.set_backend('gpu')
-    
     # Configure GPU memory growth
     physical_devices = tf.config.list_physical_devices('GPU')
     if physical_devices:
-        print(f"Found {len(physical_devices)} GPUs")
+        print(f"Found {len(physical_devices)} DirectML GPUs")
         for device in physical_devices:
             try:
                 tf.config.experimental.set_memory_growth(device, True)
                 print(f"Set memory growth for {device}")
             except Exception as e:
                 print(f"Error setting memory growth: {e}")
-        
-        # Print GPU device info
-        print("GPU device information:")
-        for device in physical_devices:
-            details = tf.config.experimental.get_device_details(device)
-            print(f"  {device}: {details}")
     else:
         print("No GPUs found")
 except Exception as e:
@@ -839,13 +827,13 @@ def train_model_ensemble(X, y, classes, file_paths, num_models=3):
         # Compile with appropriate loss
         if Config.USE_FOCAL_LOSS:
             model.compile(
-                optimizer=itex.optimizers.Adam(learning_rate=Config.LEARNING_RATE),
+                optimizer=tf.keras.optimizers.Adam(learning_rate=Config.LEARNING_RATE),
                 loss=focal_loss(gamma=Config.FOCAL_LOSS_GAMMA),
                 metrics=['accuracy']
             )
         else:
             model.compile(
-                optimizer=itex.optimizers.Adam(learning_rate=Config.LEARNING_RATE),
+                optimizer=tf.keras.optimizers.Adam(learning_rate=Config.LEARNING_RATE),
                 loss='categorical_crossentropy',
                 metrics=['accuracy']
             )

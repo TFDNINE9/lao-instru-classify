@@ -1,3 +1,6 @@
+import os
+os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 import tensorflow as tf
 print("TensorFlow version:", tf.__version__)
 print("Num GPUs Available:", len(tf.config.list_physical_devices('GPU')))
