@@ -6,6 +6,9 @@ model_attention/
 venv/
 venv_cuda/
 tf-gpu-env/
+models/
+noobs/
+unsuable_model/
 
 # Cached Python bytecode
 __pycache__/
