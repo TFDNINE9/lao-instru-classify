@@ -9,11 +9,12 @@ import random
 import json
 import seaborn as sns 
 import scipy.signal
-import onnx
 import tf2onnx 
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import confusion_matrix, classification_report
 from tqdm import tqdm
+# Try this import instead
+from tensorflow import keras
 
 # Configure Intel GPU
 try:
@@ -36,16 +37,16 @@ except Exception as e:
 class Config:
     # Audio parameters
     SAMPLE_RATE = 44100
-    SEGMENT_DURATION = 5  # Duration of each segment in seconds
+    SEGMENT_DURATION = 4  # Duration of each segment in seconds
     OVERLAP = 0.5  # 50% overlap between segments
-    MAX_SEGMENTS = 6  # Maximum number of segments per audio file
-    N_MELS = 128
+    MAX_SEGMENTS = 5  # Maximum number of segments per audio file
+    N_MELS = 64
     N_FFT = 2048
-    HOP_LENGTH = 512
+    HOP_LENGTH = 1024
     FMAX = 8000
     
     # Model parameters
-    BATCH_SIZE = 16
+    BATCH_SIZE = 8
     EPOCHS = 150  # Increased max epochs
     LEARNING_RATE = 0.001
     EARLY_STOPPING_PATIENCE = 15  # Increased patience
@@ -436,7 +437,7 @@ def load_data_for_cnn():
     features_list = []  # Will hold spectrograms for each audio file
     labels = []
     file_paths = []  # Store file paths for reference
-    
+
     # Identify parent folders (assuming each instrument has multiple session folders)
     parent_dirs = [d for d in os.listdir(Config.DATA_PATH) if os.path.isdir(os.path.join(Config.DATA_PATH, d))]
     print(f"Found {len(parent_dirs)} instrument categories: {parent_dirs}")
@@ -804,6 +805,7 @@ def export_model(model, filepath_base, class_labels=None):
 
 # Function to train multiple models for ensembling
 def train_model_ensemble(X, y, classes, file_paths, num_models=3):
+    keras.mixed_precision.set_global_policy('mixed_float16')
     """Train multiple models with different initializations"""
     models = []
     histories = []
@@ -883,7 +885,7 @@ def train_model_ensemble(X, y, classes, file_paths, num_models=3):
         )
         
         # Evaluate on test set
-        test_loss, test_acc = model.evaluate(X_test, y_test)
+        test_loss, test_acc = model.evaluate(X_test, y_test_onehot)
         print(f"Model {i+1} test accuracy: {test_acc:.4f}")
         
         # Plot and save confusion matrix for this model
@@ -1032,7 +1034,7 @@ def main():
     y_encoded = np.array([class_to_index[label] for label in labels])
     
     # Convert list of features to numpy array
-    X = np.array(features_list)
+    X = np.array(features_list, dtype=np.float32)
     
     print(f"\nData ready for training:")
     print(f"  - Total samples: {len(X)}")

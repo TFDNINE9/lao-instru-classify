@@ -1,0 +1,1 @@
+{"num_models": 3, "model_paths": ["lao_instruments_model_cnn_improved_ensemble_1.h5", "lao_instruments_model_cnn_improved_ensemble_2.h5", "lao_instruments_model_cnn_improved_ensemble_3.h5"], "accuracy": 0.31605351170568563, "classes": ["background", "khean", "khong_vong", "pin", "ranad", "saw", "sing"]}

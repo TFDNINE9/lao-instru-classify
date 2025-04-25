@@ -1,0 +1,148 @@
+{
+  "instrument_stats": {
+    "ranad": {
+      "total_files": 101,
+      "total_duration": 302.90000000000003,
+      "mean_duration": 2.9990099009900995,
+      "sessions": {
+        "ss1": 0,
+        "ss2": 0,
+        "ss3": 0,
+        "ss4": 101,
+        "ss5": 0
+      }
+    },
+    "background": {
+      "total_files": 40,
+      "total_duration": 140.39999999999998,
+      "mean_duration": 3.5099999999999993,
+      "sessions": {
+        "ss1": 0,
+        "ss2": 0,
+        "ss3": 0,
+        "ss4": 40,
+        "ss5": 0
+      }
+    },
+    "khong_vong": {
+      "total_files": 104,
+      "total_duration": 324.0,
+      "mean_duration": 3.1153846153846154,
+      "sessions": {
+        "ss1": 0,
+        "ss2": 0,
+        "ss3": 0,
+        "ss4": 104,
+        "ss5": 0
+      }
+    },
+    "khean": {
+      "total_files": 100,
+      "total_duration": 352.2999999999998,
+      "mean_duration": 3.522999999999998,
+      "sessions": {
+        "ss1": 0,
+        "ss2": 0,
+        "ss3": 0,
+        "ss4": 100,
+        "ss5": 0
+      }
+    },
+    "pin": {
+      "total_files": 120,
+      "total_duration": 393.6,
+      "mean_duration": 3.2800000000000002,
+      "sessions": {
+        "ss1": 0,
+        "ss2": 0,
+        "ss3": 0,
+        "ss4": 120,
+        "ss5": 0
+      }
+    },
+    "saw": {
+      "total_files": 101,
+      "total_duration": 328.0,
+      "mean_duration": 3.2475247524752477,
+      "sessions": {
+        "ss1": 0,
+        "ss2": 0,
+        "ss3": 0,
+        "ss4": 101,
+        "ss5": 0
+      }
+    },
+    "sing": {
+      "total_files": 100,
+      "total_duration": 369.1000000000001,
+      "mean_duration": 3.6910000000000007,
+      "sessions": {
+        "ss1": 0,
+        "ss2": 0,
+        "ss3": 0,
+        "ss4": 100,
+        "ss5": 0
+      }
+    }
+  },
+  "duration_stats": {
+    "min": 4.2,
+    "max": 11.2,
+    "mean": 6.697878787878788,
+    "median": 6.8
+  },
+  "spectral_stats": {
+    "min_centroid": 558.516264315788,
+    "max_centroid": 4492.4525619237065,
+    "mean_centroid": 1655.0957126150233
+  },
+  "amplitude_stats": {
+    "min": 0.017547607421875,
+    "max": 0.959075927734375,
+    "mean": 0.5808022022247314
+  },
+  "sessions": {
+    "ss1": 0,
+    "ss2": 0,
+    "ss3": 0,
+    "ss4": 666,
+    "ss5": 0
+  },
+  "example_spectrograms": {
+    "background": [
+      "analysis_results/background_0.png",
+      "analysis_results/background_1.png",
+      "analysis_results/background_2.png"
+    ],
+    "pin": [
+      "analysis_results/pin_0.png",
+      "analysis_results/pin_1.png",
+      "analysis_results/pin_2.png"
+    ],
+    "khean": [
+      "analysis_results/khean_0.png",
+      "analysis_results/khean_1.png",
+      "analysis_results/khean_2.png"
+    ],
+    "khong_vong": [
+      "analysis_results/khong_vong_0.png",
+      "analysis_results/khong_vong_1.png",
+      "analysis_results/khong_vong_2.png"
+    ],
+    "ranad": [
+      "analysis_results/ranad_0.png",
+      "analysis_results/ranad_1.png",
+      "analysis_results/ranad_2.png"
+    ],
+    "saw": [
+      "analysis_results/saw_0.png",
+      "analysis_results/saw_1.png",
+      "analysis_results/saw_2.png"
+    ],
+    "sing": [
+      "analysis_results/sing_0.png",
+      "analysis_results/sing_1.png",
+      "analysis_results/sing_2.png"
+    ]
+  }
+}
